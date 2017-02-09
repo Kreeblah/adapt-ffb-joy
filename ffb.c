@@ -39,6 +39,8 @@
 #include "ffb-pro.h"
 #include "ffb-wheel.h"
 
+#include "ffb-const.h"
+
 #define USART_BAUD 31250
 
 const FFB_Driver ffb_drivers[2] =
@@ -216,7 +218,7 @@ int16_t UsbInt8ToMidiInt14(int8_t inUsbValue)
 // Returns MIDI value (i.e. max 0..7f).
 uint8_t CalcGain(uint8_t usbValue, uint8_t gain)
 	{
-	int16_t v = usbValue;
+	int16_t v = (int)((double)usbValue * FFB_STRENGTH_RATIO);
 	return (((v * gain) / 256) >> 2 ) & 0x7f;
 	}
 

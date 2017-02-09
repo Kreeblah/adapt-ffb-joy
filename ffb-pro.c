@@ -27,6 +27,7 @@
 
 #include "ffb-pro.h"
 #include "ffb.h"
+#include "ffb-const.h"
 
 #include <util/delay.h>
 #include "debug.h"
@@ -331,10 +332,10 @@ void FfbproSetCondition(
 				(FFP_MIDI_Effect_Spring_Inertia_Damper *)&effect->data;
 
 			if (data->parameterBlockOffset == 0) {
-				midi_data->coeffAxis0 = UsbInt8ToMidiInt14(data->positiveCoefficient);
+				midi_data->coeffAxis0 = UsbInt8ToMidiInt14((int)((double)data->positiveCoefficient * FFB_STRENGTH_RATIO));
 				midi_data->offsetAxis0 = UsbInt8ToMidiInt14(data->cpOffset);
 			} else {
-				midi_data->coeffAxis1 = UsbInt8ToMidiInt14(data->positiveCoefficient);
+				midi_data->coeffAxis1 = UsbInt8ToMidiInt14((int)((double)data->positiveCoefficient * FFB_STRENGTH_RATIO));
 				if (data->cpOffset == 0x80)
 					midi_data->offsetAxis1 = 0x007f;
 				else
