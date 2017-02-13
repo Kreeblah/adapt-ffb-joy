@@ -48,6 +48,9 @@
 		#include <LUFA/Drivers/USB/USB.h>
 		#include <LUFA/Drivers/Board/LEDs.h>
 
+	/* Global parameters */
+		float ffb_strength_ratio;
+
 	/* Macros: */
 		/** LED mask for the library LED driver, to indicate that the USB interface is not ready. */
 		#define LEDMASK_USB_NOTREADY      LEDS_LED1

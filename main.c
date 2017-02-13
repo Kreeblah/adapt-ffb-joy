@@ -68,6 +68,9 @@ int main(void)
 	LEDs_SetAllLEDs(LEDS_NO_LEDS);
 	sei();
 
+	// Set default FFB ratio
+	ffb_strength_ratio = 1.0;
+		
 	for (;;)
 		{
 		while (!Joystick_Connect())
@@ -489,6 +492,10 @@ void HID_Task(void)
 			e.g. "u 02 0D FF" will send bytes "0D FF" as binary to adapter's FFB data
 			processing. This example would trigger DeviceGain-report (id=0x0D) with one
 			byte parameter 0xFF.
+		
+		"s" 01 FFB_STRENGTH
+			Set force feedback strength by percentage.
+			e.g. 50 = 50%
 */
 
 
@@ -556,6 +563,7 @@ void DoCommandSetEffectType(char effectType, char value);
 void DoCommandSetEffectAtIndex(uint8_t effectIndex, char value);
 void DoCommandSendMidi(uint8_t *data, uint16_t len);
 void DoCommandSimulateUsbReceive(uint8_t *data, uint16_t len);
+void DoCommandSetFFBStrength(uint8_t *data);
 
 void ProcessCommandDataFromCOMSerial(char command, char data);
 
@@ -687,6 +695,8 @@ void CompletedCommandDataFromCOMSerial(char command, char *data, uint16_t len)
 		DoCommandSetEffectAtIndex(data[0], 0);
 	else if (command == 'E') // enable effect at index
 		DoCommandSetEffectAtIndex(data[0], 1);
+	else if (command == 's') // set force feedback strength
+		DoCommandSetFFBStrength((uint8_t*) data);
 	else
 		{
 		LogTextLfP(PSTR("Error: unknown command"));
@@ -747,6 +757,11 @@ void DoCommandSendMidi(uint8_t *data, uint16_t len)
 void DoCommandSimulateUsbReceive(uint8_t *data, uint16_t len)
 	{
 	FfbOnUsbData(data, len);
+	}
+
+void DoCommandSetFFBStrength(uint8_t *data)
+	{
+	
 	}
 
 #endif //ENABLE_JOYSTICK_SERIAL

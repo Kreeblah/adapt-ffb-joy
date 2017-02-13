@@ -40,6 +40,9 @@
 
 // Maximum number of parallel effects in memory
 #define MAX_EFFECTS 20
+
+
+extern float ffb_strength_ratio;
 	
 // ---- Input
 
