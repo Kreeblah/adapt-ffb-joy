@@ -761,7 +761,7 @@ void DoCommandSimulateUsbReceive(uint8_t *data, uint16_t len)
 
 void DoCommandSetFFBStrength(uint8_t *data)
 	{
-	
+	ffb_strength_ratio = (float)*data / 100.0;
 	}
 
 #endif //ENABLE_JOYSTICK_SERIAL
