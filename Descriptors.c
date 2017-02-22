@@ -1770,14 +1770,14 @@ const USB_Descriptor_String_t PROGMEM ProductStringJoystick =
 {
 	.Header                 = {.Size = USB_STRING_LEN(17), .Type = DTYPE_String},
 
-	.UnicodeString          = L"SidewinderPro_FFB"
+	.UnicodeString          = L"MS SidewinderPro FFB"
 };
 
 const USB_Descriptor_String_t PROGMEM ProductStringWheel =
 {
 	.Header                 = {.Size = USB_STRING_LEN(17), .Type = DTYPE_String},
 
-	.UnicodeString          = L"SidewinderWhl_FFB"
+	.UnicodeString          = L"MS SidewinderWheel FFB"
 };
 
 /** This function is called by the library when in device mode, and must be overridden (see library "USB Descriptors"

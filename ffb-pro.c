@@ -331,10 +331,10 @@ void FfbproSetCondition(
 				(FFP_MIDI_Effect_Spring_Inertia_Damper *)&effect->data;
 
 			if (data->parameterBlockOffset == 0) {
-				midi_data->coeffAxis0 = UsbInt8ToMidiInt14((int)((double)data->positiveCoefficient * ffb_strength_ratio));
+				midi_data->coeffAxis0 = UsbInt8ToMidiInt14(data->positiveCoefficient * ffb_strength_ratio / 100);
 				midi_data->offsetAxis0 = UsbInt8ToMidiInt14(data->cpOffset);
 			} else {
-				midi_data->coeffAxis1 = UsbInt8ToMidiInt14((int)((double)data->positiveCoefficient * ffb_strength_ratio));
+				midi_data->coeffAxis1 = UsbInt8ToMidiInt14(data->positiveCoefficient * ffb_strength_ratio / 100);
 				if (data->cpOffset == 0x80)
 					midi_data->offsetAxis1 = 0x007f;
 				else
@@ -360,9 +360,9 @@ void FfbproSetCondition(
 					(FFP_MIDI_Effect_Friction *)&effect->data;
 
 			if (data->parameterBlockOffset == 0)
-				midi_data->coeffAxis0 = UsbInt8ToMidiInt14(data->positiveCoefficient);
+				midi_data->coeffAxis0 = UsbInt8ToMidiInt14(data->positiveCoefficient * ffb_strength_ratio / 100);
 			else
-				midi_data->coeffAxis1 = UsbInt8ToMidiInt14(data->positiveCoefficient);
+				midi_data->coeffAxis1 = UsbInt8ToMidiInt14(data->positiveCoefficient * ffb_strength_ratio / 100);
 
 			// Send data to MIDI
 			if (effect->state & MEffectState_SentToJoystick) {	// Send update

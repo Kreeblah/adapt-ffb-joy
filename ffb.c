@@ -216,7 +216,7 @@ int16_t UsbInt8ToMidiInt14(int8_t inUsbValue)
 // Returns MIDI value (i.e. max 0..7f).
 uint8_t CalcGain(uint8_t usbValue, uint8_t gain)
 	{
-	int16_t v = (int)((double)usbValue * ffb_strength_ratio);
+	int16_t v = usbValue * ffb_strength_ratio / 100;
 	return (((v * gain) / 256) >> 2 ) & 0x7f;
 	}
 

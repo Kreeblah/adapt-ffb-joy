@@ -41,6 +41,15 @@
 
 void CDC1_Task(void);
 
+// Miura Added -->
+#define CDC_TX_ENDPOINT		4
+#define TRANSMIT_TIMEOUT	25   /* in milliseconds */
+#define TRANSMIT_FLUSH_TIMEOUT	5   /* in milliseconds */
+
+void send_str(const char *s);
+// <-- Miura Added
+
+
 /** Contains the current baud rate and other settings of the first virtual serial port. While this demo does not use
  *  the physical USART and thus does not use these settings, they must still be retained and returned to the host
  *  upon request or the host will assume the device is non-functional.
@@ -56,7 +65,9 @@ static CDC_LineEncoding_t LineEncoding1 = { .BaudRateBPS = 0,
                                             .CharFormat  = CDC_LINEENCODING_OneStopBit,
                                             .ParityType  = CDC_PARITY_None,
                                             .DataBits    = 8                            };
-
+void LoadFFBStrengthRatio(void);
+void InitFFBStrengthRatio(void);
+void UpdateFFBStrengthRatio(uint8_t value);
 
 /** Main program entry point. This routine configures the hardware required by the application, then
  *  enters a loop to run the application tasks in sequence.
@@ -68,8 +79,7 @@ int main(void)
 	LEDs_SetAllLEDs(LEDS_NO_LEDS);
 	sei();
 
-	// Set default FFB ratio
-	ffb_strength_ratio = 1.0;
+	LoadFFBStrengthRatio();
 		
 	for (;;)
 		{
@@ -90,6 +100,45 @@ int main(void)
 		USB_USBTask();
 		FlushDebugBuffer();
 		}
+	}
+
+void LoadFFBStrengthRatio(void)
+	{
+	eeprom_busy_wait();
+	uint8_t initFlag = eeprom_read_byte((uint16_t*)EEPROM_INIT);
+	
+	if(initFlag != EEPROM_INIT_FLAG)
+		{
+		InitFFBStrengthRatio();
+		}
+		
+	eeprom_busy_wait();
+	ffb_strength_ratio = eeprom_read_byte((uint16_t*)EEPROM_FFB_STRENGTH_RATIO);
+	}
+
+#define MAX_FFB_RATIO 100
+
+void InitFFBStrengthRatio(void)
+	{
+	eeprom_busy_wait();
+	eeprom_update_byte((uint16_t*)EEPROM_INIT, EEPROM_INIT_FLAG);
+	eeprom_busy_wait();
+	eeprom_update_byte((uint16_t*)EEPROM_FFB_STRENGTH_RATIO, MAX_FFB_RATIO);
+	}
+
+void UpdateFFBStrengthRatio(uint8_t value)
+	{
+	if(value > MAX_FFB_RATIO)
+		{
+		ffb_strength_ratio = MAX_FFB_RATIO;
+		}
+	else
+		{
+		ffb_strength_ratio = value;
+		}
+
+	eeprom_busy_wait();
+	eeprom_update_byte((uint16_t*)EEPROM_FFB_STRENGTH_RATIO, ffb_strength_ratio);
 	}
 
 /** Configures the board hardware and chip peripherals for the functionality. */
@@ -142,7 +191,6 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 
 	ConfigSuccess &= Endpoint_ConfigureEndpoint(FFB_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_OUT,
 	                                            FFB_EPSIZE, ENDPOINT_BANK_SINGLE);
-#ifdef ENABLE_JOYSTICK_SERIAL
 	/* Setup first CDC Interface's Endpoints */
 	ConfigSuccess &= Endpoint_ConfigureEndpoint(CDC1_TX_EPNUM, EP_TYPE_BULK, ENDPOINT_DIR_IN,
 	                                            CDC_TXRX_EPSIZE, ENDPOINT_BANK_SINGLE);
@@ -150,7 +198,6 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 	                                            CDC_TXRX_EPSIZE, ENDPOINT_BANK_SINGLE);
 	ConfigSuccess &= Endpoint_ConfigureEndpoint(CDC1_NOTIFICATION_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
 	                                            CDC_NOTIFICATION_EPSIZE, ENDPOINT_BANK_SINGLE);
-#endif // ENABLE_JOYSTICK_SERIAL
 
 	/* Reset line encoding baud rates so that the host knows to send new values */
 	LineEncoding1.BaudRateBPS = 0;
@@ -181,10 +228,8 @@ void EVENT_USB_Device_ControlRequest(void)
 		uint16_t 	wLength
 	*/
 
-#ifdef ENABLE_JOYSTICK_SERIAL
 	/* Determine which interface's Line Coding data is being set from the wIndex parameter */
 	void* LineEncodingData = (USB_ControlRequest.wIndex == 1) ? &LineEncoding1 : NULL;
-#endif // ENABLE_JOYSTICK_SERIAL
 
 	if (DoDebug(DEBUG_DETAIL))
 		{
@@ -304,8 +349,6 @@ void EVENT_USB_Device_ControlRequest(void)
 				}
 			break;
 
-#ifdef ENABLE_JOYSTICK_SERIAL
-
 			// Serial stuff
 		case CDC_REQ_GetLineEncoding:
 			if (DoDebug(DEBUG_DETAIL))
@@ -346,7 +389,6 @@ void EVENT_USB_Device_ControlRequest(void)
 			}
 
 			break;
-#endif // ENABLE_JOYSTICK_SERIAL
 		}
 
 	}
@@ -496,12 +538,10 @@ void HID_Task(void)
 		"s" 01 FFB_STRENGTH
 			Set force feedback strength by percentage.
 			e.g. 50 = 50%
+
+		"S" Print FFB Strength ratio.
 */
 
-
-#if !defined ENABLE_JOYSTICK_SERIAL
-void CDC1_Task(void)  {}
-#else
 
 void ProcessDataFromCOMSerial(char data);
 
@@ -540,9 +580,12 @@ void CDC1_Task(void)
 			ProcessDataFromCOMSerial(data[i]);
 			}
 
+		_delay_ms(100);
+
 		LEDs_SetAllLEDs(LEDS_NO_LEDS);
 		}
 	}
+
 
 uint8_t ParseHexNibble(char data)
 	{
@@ -563,7 +606,8 @@ void DoCommandSetEffectType(char effectType, char value);
 void DoCommandSetEffectAtIndex(uint8_t effectIndex, char value);
 void DoCommandSendMidi(uint8_t *data, uint16_t len);
 void DoCommandSimulateUsbReceive(uint8_t *data, uint16_t len);
-void DoCommandSetFFBStrength(uint8_t *data);
+void DoCommandSetFFBStrength(uint8_t data);
+void DoCommandPrintFFBStrengthRatio(void);
 
 void ProcessCommandDataFromCOMSerial(char command, char data);
 
@@ -589,6 +633,11 @@ void ProcessDataFromCOMSerial(char data)
 		if (data == 'l')
 			{
 			DoCommandListEffects();
+			return;
+			}
+		else if(data == 'S')
+			{
+			DoCommandPrintFFBStrengthRatio();
 			return;
 			}
 
@@ -625,7 +674,7 @@ void ProcessDataFromCOMSerial(char data)
 
 		if (DoDebug(DEBUG_DETAIL))
 			{
-			LogTextP(PSTR("Expecting data len="));
+			LogTextP(PSTR("Exp data len="));
 			LogBinaryLf((uint8_t*) &gOngoingSerialCommandDataLen, 1);
 			}
 
@@ -696,7 +745,7 @@ void CompletedCommandDataFromCOMSerial(char command, char *data, uint16_t len)
 	else if (command == 'E') // enable effect at index
 		DoCommandSetEffectAtIndex(data[0], 1);
 	else if (command == 's') // set force feedback strength
-		DoCommandSetFFBStrength((uint8_t*) data);
+		DoCommandSetFFBStrength(data[0]);
 	else
 		{
 		LogTextLfP(PSTR("Error: unknown command"));
@@ -759,9 +808,16 @@ void DoCommandSimulateUsbReceive(uint8_t *data, uint16_t len)
 	FfbOnUsbData(data, len);
 	}
 
-void DoCommandSetFFBStrength(uint8_t *data)
+void DoCommandSetFFBStrength(uint8_t data)
 	{
-	ffb_strength_ratio = (float)*data / 100.0;
+	UpdateFFBStrengthRatio(data);
+	
+	DoCommandPrintFFBStrengthRatio();
 	}
 
-#endif //ENABLE_JOYSTICK_SERIAL
+void DoCommandPrintFFBStrengthRatio()
+	{
+	char text[50];
+	sprintf(text, "FFB strength ratio: %d", ffb_strength_ratio);
+	LogTextLf(text);
+	}

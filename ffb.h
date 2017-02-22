@@ -42,7 +42,7 @@
 #define MAX_EFFECTS 20
 
 
-extern float ffb_strength_ratio;
+extern uint8_t ffb_strength_ratio;
 	
 // ---- Input
 
