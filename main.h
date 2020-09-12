@@ -42,11 +42,16 @@
 		#include <avr/interrupt.h>
 		#include <string.h>
 
+		#include <avr/eeprom.h>
+
 		#include "Descriptors.h"
 
 		#include <LUFA/Version.h>
 		#include <LUFA/Drivers/USB/USB.h>
 		#include <LUFA/Drivers/Board/LEDs.h>
+
+	/* Global parameters: */
+		uint8_t ffb_strength_ratio;
 
 	/* Macros: */
 		/** LED mask for the library LED driver, to indicate that the USB interface is not ready. */
@@ -66,6 +71,11 @@
 		 *  This mirrors the layout described to the host in the HID report descriptor, in Descriptors.c.
 		 */
 
+/* EEPROM defines: */
+		#define EEPROM_INIT 0x0000
+		#define EEPROM_INIT_FLAG 128
+		#define EEPROM_FFB_STRENGTH_RATIO 0x0001
+
 	/* Function Prototypes: */
 		void SetupHardware(void);
 		void HID_Task(void);
@@ -75,6 +85,6 @@
 		void EVENT_USB_Device_ConfigurationChanged(void);
 		void EVENT_USB_Device_ControlRequest(void);
 		void EVENT_USB_Device_StartOfFrame(void);
-
+	
 #endif
 

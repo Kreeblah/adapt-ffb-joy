@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "ffb.h"
 
+extern uint8_t ffb_strength_ratio;
+
 // ----------------------------------
 // Microsoft Sidewinder Force Feedback Pro FFB structures
 

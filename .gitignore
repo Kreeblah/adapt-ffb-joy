@@ -1,0 +1,12 @@
+FeedbackTester/obj/Release/DesignTimeResolveAssemblyReferences.cache
+*.suo
+FeedbackTester/Feedback.v11.suo
+*.suo
+*.d
+*.o
+*.lst
+Joystick.elf
+*.hex
+Joystick.lss
+*.map
+Joystick.sym
